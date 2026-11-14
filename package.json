@@ -1,0 +1,23 @@
+{
+  "name": "fmde-hub",
+  "version": "0.1.0",
+  "private": true,
+  "license": "Apache-2.0",
+  "description": "FMDEhub: a browser-based network manager for the WMO First Mile Data Exchange (FMDE)",
+  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w apps/fmde-hub",
+    "build": "npm run build -w apps/fmde-hub",
+    "typecheck": "npm run typecheck -w apps/fmde-hub",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "typescript": "^6.0.3",
+    "vitest": "^5.1.0"
+  }
+}
