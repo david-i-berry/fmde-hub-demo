@@ -61,7 +61,8 @@ export const ATS_TESTS: AtsTest[] = [
   t('parameter-standard-names', 'declaration', 'Namespace declaration', 'Namespace prefixes are non-empty alphanumeric/underscore; URIs resolve over HTTP.', 'metadata', 'automated',
     'The prefix is checked on every metadata message; URI resolution needs an HTTP request and is not run in the browser.'),
   t('parameter-standard-names', 'hierarchy', 'Standard name hierarchy', 'Every namespace URI is HTTP accessible without authentication.', 'metadata', 'network'),
-  t('transmission', 'conventions', 'Topic conventions', 'The topic is lowercase ASCII (T.50) without dots.', 'topic', 'automated'),
+  t('transmission', 'conventions', 'Topic conventions', 'The topic is lowercase ASCII (T.50) without dots.', 'topic', 'automated',
+    'Control characters are rejected too: T.50 includes them, but MQTT 5 (1.5.4) says topic strings SHOULD NOT contain U+0001–U+001F or U+007F.'),
   t('transmission', 'group_node_id', 'Group and node id', 'group-id and node-id are non-empty lowercase ASCII alphanumerics and hyphens, not starting or ending with a hyphen.', 'topic', 'automated'),
   t('transmission', 'management', 'Topic hierarchy management', 'The First Mile topic hierarchy is properly managed.', 'any', 'not-applicable'),
   t('transmission', 'protocol', 'Protocol', 'Messages are transmitted using MQTT.', 'any', 'not-applicable'),
@@ -111,7 +112,7 @@ export const CODE_INFO: Record<ConformanceCode, CodeInfo> = {
   VALUE_NOT_SET: { test: '/conf/message-encoding/value', requirement: '/req/message-encoding/value A', severity: 'error', description: 'A Value sets none of its types (use emptyValue for missing data)' },
   UNKNOWN_NAMESPACE: { test: '/conf/parameter-standard-names/assignment', requirement: '/req/parameter-standard-names/assignment A', severity: 'error', description: 'A standard name uses a prefix the namespaces map does not declare' },
   NAMESPACE_PREFIX_INVALID: { test: '/conf/parameter-standard-names/declaration', requirement: '/req/parameter-standard-names/declaration C', severity: 'error', description: 'A namespace prefix is empty or has characters other than alphanumerics and underscores' },
-  TOPIC_CONVENTIONS: { test: '/conf/transmission/conventions', requirement: '/req/transmission/conventions', severity: 'error', description: 'The topic is not lowercase ASCII without dots' },
+  TOPIC_CONVENTIONS: { test: '/conf/transmission/conventions', requirement: '/req/transmission/conventions', severity: 'error', description: 'The topic is not lowercase printable ASCII without dots' },
   GROUP_NODE_ID_INVALID: { test: '/conf/transmission/group_node_id', requirement: '/req/transmission/group_node_id', severity: 'error', description: 'The group-id or node-id is not lowercase alphanumerics and hyphens' },
   // hub checks: requirements without an ATS test, or operational heuristics
   BAD_TOPIC: { requirement: '/req/transmission/publishing A', severity: 'error', description: 'The topic is not in the First Mile topic hierarchy (firstmile/a/<group>/<node>)' },
@@ -185,9 +186,9 @@ export function isCfNamespace(prefix: string, uri: string): boolean {
 /** /conf/transmission/conventions and /conf/transmission/group_node_id */
 export function checkTopic(topic: string, group: string, nodeId: string): ConformanceIssue[] {
   const issues: ConformanceIssue[] = []
-  // eslint-disable-next-line no-control-regex
-  if (topic !== topic.toLowerCase() || !/^[\x00-\x7f]*$/.test(topic) || topic.includes('.')) {
-    issues.push({ code: 'TOPIC_CONVENTIONS', detail: `topic "${topic}" must be lowercase ASCII without dots` })
+  // printable ASCII only: no control characters (U+0000–U+001F, U+007F) and nothing beyond U+007F
+  if (topic !== topic.toLowerCase() || !/^[\x20-\x7e]*$/.test(topic) || topic.includes('.')) {
+    issues.push({ code: 'TOPIC_CONVENTIONS', detail: `topic ${JSON.stringify(topic)} must be lowercase printable ASCII without dots` })
   }
   for (const [what, id] of [['group-id', group], ['node-id', nodeId]] as const) {
     if (!ID_PATTERN.test(id)) issues.push({ code: 'GROUP_NODE_ID_INVALID', detail: `${what} "${id}" must be lowercase alphanumerics and hyphens, not starting or ending with a hyphen` })

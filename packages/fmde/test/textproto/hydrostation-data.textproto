@@ -1,0 +1,20 @@
+data {
+  observations {
+    parameterDefinitionId: 1
+    time { seconds: 1755765000 }  # 2025-08-21T08:30:00.000Z
+    values { doubleValue: 3.42 }  # Water Level [m]
+    values { doubleValue: 0 }  # Rainfall Intensity [mm/h]
+  }
+  observations {
+    parameterDefinitionId: 1
+    time { seconds: 1755765600 }  # 2025-08-21T08:40:00.000Z
+    values { doubleValue: 3.43 }  # Water Level [m]
+    values { doubleValue: 0 }  # Rainfall Intensity [mm/h]
+  }
+  observations {
+    parameterDefinitionId: 1
+    time { seconds: 1755766200 }  # 2025-08-21T08:50:00.000Z
+    values { doubleValue: 3.52 }  # Water Level [m]
+    values { doubleValue: 3.1 }  # Rainfall Intensity [mm/h]
+  }
+}

@@ -1,0 +1,115 @@
+metadata {
+  node {
+    name: "Campbell CR3000 Datalogger"
+    location {
+      latitude: 44.90192
+      longitude: 15.60844
+      heightMetres: 1.5
+      referenceSurface: GL
+    }
+    serialNumber: "CR3K-2025-99384"
+    firmwareVersion: "OS25.04"
+  }
+  observers {
+    id: 1
+    name: "Vaisala WXT536 Weather Transmitter"
+    location {
+      latitude: 44.90192
+      longitude: 15.60844
+      heightMetres: 2
+      referenceSurface: GL
+    }
+    serialNumber: "WX536-3482934"
+    firmwareVersion: "3.12"
+  }
+  parameterDefinitions {
+    id: 1
+    description: "Weather parameters"
+    parameters {
+      longName: "Air Temperature"
+      unit: "°C"
+      standardNames { key: "cf" value: "air_temperature" }
+      device {
+        observerId: 1
+      }
+      cellMethod: POINT
+    }
+    parameters {
+      longName: "Relative Humidity"
+      unit: "%"
+      standardNames { key: "cf" value: "relative_humidity" }
+      device {
+        observerId: 1
+      }
+      cellMethod: POINT
+    }
+    parameters {
+      longName: "Barometric Pressure"
+      unit: "hPa"
+      standardNames { key: "cf" value: "air_pressure" }
+      device {
+        observerId: 1
+      }
+      cellMethod: POINT
+    }
+    parameters {
+      longName: "Wind Speed (10min mean)"
+      unit: "m/s"
+      standardNames { key: "cf" value: "wind_speed" }
+      device {
+        observerId: 1
+      }
+      cellMethod: MEAN
+      cellPeriodSeconds: 600
+    }
+    parameters {
+      longName: "Wind Direction (10min mean)"
+      unit: "°"
+      standardNames { key: "cf" value: "wind_from_direction" }
+      device {
+        observerId: 1
+      }
+      cellMethod: MEAN
+      cellPeriodSeconds: 600
+    }
+    parameters {
+      longName: "Precipitation"
+      unit: "mm"
+      standardNames { key: "cf" value: "precipitation_amount" }
+      device {
+        observerId: 1
+      }
+      cellMethod: SUM
+      cellPeriodSeconds: 600
+    }
+  }
+  parameterDefinitions {
+    id: 2
+    description: "Internal logger parameters"
+    parameters {
+      longName: "Battery Voltage"
+      unit: "V"
+      device {
+        node {}
+      }
+      cellMethod: POINT
+    }
+    parameters {
+      longName: "Solar Panel Voltage"
+      unit: "V"
+      device {
+        node {}
+      }
+      cellMethod: POINT
+    }
+    parameters {
+      longName: "Internal Logger Temperature"
+      unit: "°C"
+      device {
+        node {}
+      }
+      cellMethod: POINT
+    }
+  }
+  namespaces { key: "cf" value: "https://vocab.nerc.ac.uk/standard_name/" }
+}

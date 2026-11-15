@@ -1,7 +1,7 @@
 // ATS checks against the official FMDE examples (vendor/fmde) and targeted broken variants.
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
-import { ATS_TESTS, checkMetadata, CODE_INFO, evaluateAts, isKnownUnit } from '../src/ats'
+import { ATS_TESTS, checkMetadata, checkTopic, CODE_INFO, evaluateAts, isKnownUnit } from '../src/ats'
 import type { RawMetadata } from '../src/fmde'
 import { decodeMessage, encodeMessage } from '../src/proto'
 
@@ -109,5 +109,32 @@ describe('CODE_INFO', () => {
     for (const [code, info] of Object.entries(CODE_INFO)) {
       if (info.test) expect(ids.has(info.test), `${code} -> ${info.test}`).toBe(true)
     }
+  })
+})
+
+describe('checkTopic', () => {
+  const topicCodes = (topic: string, group = 'test', nodeId = 'node-1') => checkTopic(topic, group, nodeId).map((i) => i.code)
+
+  it('passes a conforming topic', () => {
+    expect(topicCodes('firstmile/a/test/node-1')).toEqual([])
+  })
+
+  it('rejects upper case, dots and characters beyond ASCII', () => {
+    expect(topicCodes('firstmile/a/Test/node-1')).toContain('TOPIC_CONVENTIONS')
+    expect(topicCodes('firstmile/a/test/node.1')).toContain('TOPIC_CONVENTIONS')
+    expect(topicCodes('firstmile/a/tést/node-1')).toContain('TOPIC_CONVENTIONS')
+  })
+
+  it('rejects control characters, showing them escaped in the detail', () => {
+    for (const c of ['\x01', '\x07', '\t', '\n', '\x1f', '\x7f']) {
+      const issues = checkTopic(`firstmile/a/test/node${c}1`, 'test', 'node-1')
+      expect(issues.map((i) => i.code), JSON.stringify(c)).toEqual(['TOPIC_CONVENTIONS'])
+      expect(issues[0]?.detail).toContain(JSON.stringify(`firstmile/a/test/node${c}1`))
+    }
+  })
+
+  it('checks group-id and node-id: lowercase alphanumerics and hyphens, not at either end', () => {
+    expect(topicCodes('firstmile/a/test/-node', 'test', '-node')).toEqual(['GROUP_NODE_ID_INVALID'])
+    expect(topicCodes('firstmile/a/test_1/node-1', 'test_1')).toEqual(['GROUP_NODE_ID_INVALID'])
   })
 })

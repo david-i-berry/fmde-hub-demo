@@ -1,0 +1,19 @@
+data {
+  observations {
+    parameterDefinitionId: 1
+    time { seconds: 1755766200 }  # 2025-08-21T08:50:00.000Z
+    values { doubleValue: 18.6 }  # Air Temperature [°C]
+    values { doubleValue: 72.3 }  # Relative Humidity [%]
+    values { emptyValue {} }  # Barometric Pressure
+    values { doubleValue: 3.4 }  # Wind Speed (10min mean) [m/s]
+    values { doubleValue: 215 }  # Wind Direction (10min mean) [°]
+    values { doubleValue: 0.4 }  # Precipitation [mm]
+  }
+  observations {
+    parameterDefinitionId: 2
+    time { seconds: 1755766200 }  # 2025-08-21T08:50:00.000Z
+    values { doubleValue: 12.4 }  # Battery Voltage [V]
+    values { doubleValue: 17.6 }  # Solar Panel Voltage [V]
+    values { doubleValue: 29.3 }  # Internal Logger Temperature [°C]
+  }
+}
