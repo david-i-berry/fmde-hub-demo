@@ -1,0 +1,15 @@
+{
+  "name": "@fmde-hub/fmde",
+  "version": "0.1.0",
+  "private": true,
+  "description": "FMDE in TypeScript: the schema, decode/encode, topics, normalisation into the FMDEhub model and conformance (ATS) checks (no Vue)",
+  "type": "module",
+  "exports": { ".": "./src/index.ts" },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit -p .",
+    "generate:fmde": "node --experimental-strip-types scripts/generate-fmde-json.ts",
+    "fetch:units": "node --experimental-strip-types scripts/fetch-wmo-units.ts"
+  },
+  "dependencies": { "protobufjs": "8.8.1" }
+}

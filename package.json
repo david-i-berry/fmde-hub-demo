@@ -12,12 +12,12 @@
   "scripts": {
     "dev": "npm run dev -w apps/fmde-hub",
     "build": "npm run build -w apps/fmde-hub",
-    "typecheck": "npm run typecheck -w apps/fmde-hub",
+    "typecheck": "npm run typecheck --workspaces --if-present",
     "test": "vitest run"
   },
   "devDependencies": {
-    "@types/node": "^26.6.6",
-    "typescript": "^6.0.3",
-    "vitest": "^5.1.0"
+    "@types/node": "24.19.2",
+    "typescript": "6.0.3",
+    "vitest": "5.1.0"
   }
 }

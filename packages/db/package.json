@@ -1,0 +1,10 @@
+{
+  "name": "@fmde-hub/db",
+  "version": "0.1.0",
+  "private": true,
+  "description": "FMDEhub PostgreSQL schema, migrations and metric functions (portable to native PostgreSQL)",
+  "type": "module",
+  "exports": { ".": "./src/index.ts" },
+  "scripts": { "test": "vitest run", "typecheck": "tsc --noEmit -p ." },
+  "dependencies": { "@electric-sql/pglite": "0.5.13", "@fmde-hub/fmde": "*" }
+}

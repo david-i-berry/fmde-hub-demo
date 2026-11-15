@@ -12,7 +12,7 @@ messages and metadata, and the message inspector. Data is kept in the browser's 
 
 ```
 apps/fmde-hub/        the Vue 3 + Vuetify PWA
-packages/model/       FMDE protobuf decoding, normalisation, node state (no Vue)
+packages/fmde/        FMDE: schema, decoding, topics, normalisation, conformance (ATS) checks (no Vue)
 packages/db/          the browser database schema (PGlite)
 packages/ingest/      the MQTT source and ingest into the database
 packages/components/  charts, tables, map and other Vue components
