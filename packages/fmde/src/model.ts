@@ -165,6 +165,12 @@ export interface NodeHubConfig {
   /** Override the global last-seen thresholds for this node. */
   lateAfterSeconds?: number
   silentAfterSeconds?: number
+  /** Node-health parameters by series key, where the heuristic in health.ts does not find them. */
+  healthParamMap?: {
+    batteryVoltage?: SeriesKey
+    solarVoltage?: SeriesKey
+    loggerTemperature?: SeriesKey
+  }
 }
 
 /** Operational state: is the node working? (conformance is separate) */
