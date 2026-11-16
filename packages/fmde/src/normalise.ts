@@ -274,6 +274,8 @@ export function decodeData(raw: RawData, ctx: DataContext): DecodedData {
   const noTime: number[] = []
   const outOfRange: number[] = []
   const countMismatch: string[] = []
+  /** observation indices per definition and time, to find repeated times */
+  const byDefTime = new Map<string, number[]>()
   const unknownDefs = new Set<number>()
 
   const defs = new Map<number, Parameter[]>()
@@ -296,6 +298,8 @@ export function decodeData(raw: RawData, ctx: DataContext): DecodedData {
       ;(o.time ? outOfRange : noTime).push(i)
       return
     }
+    const defTime = `${o.parameterDefinitionId ?? 0} at ${time}`
+    byDefTime.set(defTime, [...(byDefTime.get(defTime) ?? []), i])
     const ms = Date.parse(time)
     first = first === null ? ms : Math.min(first, ms)
     last = last === null ? ms : Math.max(last, ms)
@@ -333,6 +337,10 @@ export function decodeData(raw: RawData, ctx: DataContext): DecodedData {
   })
 
   // one issue per cause per message, listing the observations it affects
+  const repeated = [...byDefTime].filter(([, idx]) => idx.length > 1).map(([defTime, idx]) => `definition ${defTime}: observations ${idx.join(', ')}`)
+  if (repeated.length > 0) {
+    issues.push({ code: 'DUPLICATE_OBSERVATION_TIME', detail: `${repeated.length} time(s) repeated for the same definition (the last observation is stored): ${list(repeated)}` })
+  }
   if (noTime.length > 0) issues.push({ code: 'MISSING_TIME', detail: `${noTime.length} observation(s) with no time: ${list(noTime)}` })
   if (outOfRange.length > 0) {
     issues.push({ code: 'MISSING_TIME', detail: `${outOfRange.length} observation(s) with a time outside years 0001-9999: ${list(outOfRange)}` })

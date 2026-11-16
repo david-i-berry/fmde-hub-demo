@@ -121,6 +121,16 @@ export const CODE_INFO: Record<ConformanceCode, CodeInfo> = {
   DATA_RETAINED: { requirement: 'schema: FirstMileMessage.data MUST NOT be retained', severity: 'error', description: 'A data message was published with the retained flag' },
   UNKNOWN_DEFINITION: { requirement: '/req/message-encoding/observation A', severity: 'error', description: 'An observation refers to a parameter definition the metadata does not declare' },
   VALUE_COUNT_MISMATCH: { requirement: '/req/message-encoding/parameter H', severity: 'error', description: 'An observation has a different number of values than its definition has parameters; it cannot be decoded' },
+  DUPLICATE_OBSERVATION_TIME: {
+    requirement: 'hub check (a candidate requirement and ATS test for FMDE)',
+    severity: 'warning',
+    description: 'A data message has two or more observations of the same parameter definition at the same time; the last one is stored',
+  },
+  VALUE_REPLACED: {
+    requirement: 'hub check',
+    severity: 'warning',
+    description: 'A data message gave a different value for an observation already received (same series and time); the later message replaced it',
+  },
   TIME_IN_FUTURE: { requirement: '/req/message-encoding/observation B (hub check)', severity: 'warning', description: 'Observation time is later than receipt: the logger clock or time zone is probably wrong' },
   NODE_ID_MISMATCH: { requirement: 'hub check (Node.id is under discussion in /req/message-encoding/node)', severity: 'warning', description: 'Node.id differs from the node-id level of the topic' },
   METADATA_CLEARED: { requirement: 'hub check', severity: 'warning', description: 'A zero-length retained message deleted the retained metadata' },

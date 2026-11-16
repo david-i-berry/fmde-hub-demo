@@ -22,7 +22,7 @@ The database schema is described, with a UML diagram, in [`docs/database.md`](do
 
 [`.github/workflows/pages.yml`](.github/workflows/pages.yml) builds `apps/fmde-hub` on every push to
 `main` with the Pages settings: `FMDEHUB_BASE` (the base path) and a `config.json`
-of `{ "hideConformance": true, "historyRecorder": false }`. It also copies `index.html` to
+of `{ "hideConformance": true }`. It also copies `index.html` to
 `404.html`, so links to node pages work.
 
 To run it locally:

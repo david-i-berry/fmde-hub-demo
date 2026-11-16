@@ -191,3 +191,35 @@ describe('canonicalJson', () => {
     expect(canonicalJson(reordered)).toBe(canonicalJson(raw))
   })
 })
+
+describe('decodeData: repeated observation times', () => {
+  const metadata = normalise(example('meteostation/metadata').metadata!).metadata
+  const logger = (time: number, values: number[]) => ({ parameterDefinitionId: 2, time: { seconds: time }, values: values.map((v) => ({ doubleValue: v })) })
+
+  it('warns DUPLICATE_OBSERVATION_TIME for a definition observed twice at the same time', () => {
+    const d = decode(receivedData({ observations: [logger(1755766200, [12.4, 17.6, 29.3]), logger(1755766200, [12.5, 17.6, 29.3])] }), metadata)
+    expect(d.issues).toEqual([
+      {
+        code: 'DUPLICATE_OBSERVATION_TIME',
+        detail: '1 time(s) repeated for the same definition (the last observation is stored): definition 2 at 2025-08-21T08:50:00.000Z: observations 0, 1',
+      },
+    ])
+  })
+
+  it('warns even when the repeated observation has the same values', () => {
+    const d = decode(receivedData({ observations: [logger(1755766200, [12.4, 17.6, 29.3]), logger(1755766200, [12.4, 17.6, 29.3])] }), metadata)
+    expect(d.issues.map((i) => i.code)).toEqual(['DUPLICATE_OBSERVATION_TIME'])
+  })
+
+  it('does not warn for different times, or for different definitions at the same time', () => {
+    const d = decode(example('meteostation/data').data!, metadata) // definitions 1 and 2, both at 08:50
+    expect(d.issues).toEqual([])
+    const twoTimes = decode(receivedData({ observations: [logger(1755766200, [1, 2, 3]), logger(1755766260, [1, 2, 3])] }), metadata)
+    expect(twoTimes.issues).toEqual([])
+  })
+
+  it('detects repeats without metadata too (a property of the message alone)', () => {
+    const d = decode(receivedData({ observations: [logger(1755766200, [1, 2, 3]), logger(1755766200, [1, 2, 3])] }), null)
+    expect(d.issues.map((i) => i.code)).toEqual(expect.arrayContaining(['NO_METADATA', 'DUPLICATE_OBSERVATION_TIME']))
+  })
+})
