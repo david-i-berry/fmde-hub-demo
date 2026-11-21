@@ -1,0 +1,39 @@
+# Typecheck and tests on every push and pull request.
+# Actions are pinned to full commit SHAs (tags can be moved); Dependabot keeps the pins up to date.
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      # Fail if any committed file matches .gitignore: AI assistant/agent files, secrets,
+      # node_modules, build output. Catches files added with `git add -f`.
+      - name: No ignored files committed
+        run: |
+          bad=$(git ls-files --cached --ignored --exclude-standard)
+          if [ -n "$bad" ]; then
+            echo "::error::Committed files that .gitignore excludes (AI/agent files, secrets or build output):"
+            echo "$bad"
+            exit 1
+          fi
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      # every package must carry a valid npm registry signature
+      - run: npm audit signatures
+      # fail on known high/critical vulnerabilities
+      - run: npm audit --audit-level=high
+      - run: npm run typecheck
+      - run: npm test

@@ -1,9 +1,15 @@
 import type { PGliteInterface, Transaction } from '@electric-sql/pglite'
 import type { Conformance, NodeState, NodeStatus } from '@fmde-hub/fmde'
 import m0001 from './migrations/0001_init.sql?raw'
+import m0002 from './migrations/0002_observation_empty_obs.sql?raw'
+import m0003 from './migrations/0003_node_state_ok_silent.sql?raw'
 
 /** Numbered migrations, applied in order at start-up. Never edit one that has shipped; add a new one. */
-export const MIGRATIONS: { id: number; name: string; sql: string }[] = [{ id: 1, name: '0001_init', sql: m0001 }]
+export const MIGRATIONS: { id: number; name: string; sql: string }[] = [
+  { id: 1, name: '0001_init', sql: m0001 },
+  { id: 2, name: '0002_observation_empty_obs', sql: m0002 },
+  { id: 3, name: '0003_node_state_ok_silent', sql: m0003 },
+]
 
 export type Db = PGliteInterface
 export type Tx = Transaction | PGliteInterface

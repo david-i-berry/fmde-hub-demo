@@ -1,0 +1,26 @@
+# Dependabot: weekly PRs for npm dependencies and the SHA-pinned GitHub Actions.
+# cooldown waits until a release is a week old before proposing it, so a malicious
+# release has time to be spotted and pulled from the registry first.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      npm-minor-and-patch:
+        update-types: [minor, patch]
+    ignore:
+      # Vue Router 5 bundles a build-time file-based-routing plugin (~25 extra packages, incl. Babel 8
+      # and ast-walker-scope 0.x) that FMDEhub does not use; stay on 4.x, which has one dependency.
+      - dependency-name: vue-router
+        update-types: [version-update:semver-major]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7

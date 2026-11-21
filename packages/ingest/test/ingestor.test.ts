@@ -263,3 +263,25 @@ describe('POC1', () => {
     expect(ev.issues.map((i) => i.code)).toContain('METADATA_CLEARED')
   })
 })
+
+describe('node state', () => {
+  const MIN = 60_000
+  const stateAt = async (now: Date) => (await nodeStatus(db, new Date(now.getTime() - DAY), now, now))[0]!.state
+
+  it('is NEVER_SEEN with metadata only, OK while data arrives, SILENT after silentAfterSeconds', async () => {
+    const t0 = new Date(Date.now() - 2 * DAY)
+    await ingestor.ingest(msg(metadata(), t0, true))
+    expect(await stateAt(new Date(t0.getTime() + MIN))).toBe('NEVER_SEEN')
+    await ingestor.ingest(msg(data(t0), t0))
+    expect(await stateAt(new Date(t0.getTime() + 25 * MIN))).toBe('OK') // was LATE after 20 min
+    expect(await stateAt(new Date(t0.getTime() + 31 * MIN))).toBe('SILENT')
+  })
+
+  it('judges a node without metadata by its data, and empty or undecodable values do not change it', async () => {
+    const t0 = new Date(Date.now() - 2 * DAY)
+    await ingestor.ingest(msg(data(t0), t0)) // no metadata: stored raw, was NO_METADATA
+    const [status] = await nodeStatus(db, new Date(t0.getTime() - DAY), new Date(t0.getTime() + MIN), new Date(t0.getTime() + MIN))
+    expect(status!.lostData).toBeGreaterThan(0) // still counted (was DEGRADED)
+    expect(status!.state).toBe('OK')
+  })
+})

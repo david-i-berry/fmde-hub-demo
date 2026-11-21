@@ -7,6 +7,7 @@ import { computed } from 'vue'
 import VChart from 'vue-echarts'
 import { arrivalHeight, arrivalKind, type ArrivalKind, type ArrivalPoint } from './arrival'
 import { chartTokens, stamp, timeAxis, tooltipBase, valueAxis } from './chart'
+import { textLines, type TextLine } from './dom'
 import { formatDuration } from './format'
 
 export type { ArrivalPoint } from './arrival'
@@ -33,9 +34,9 @@ const byId = computed(() => new Map(props.messages.map((m) => [m.id, m])))
 /** Chart colours, also used by the legend's styles below. */
 const tokens = computed(() => chartTokens(props.dark))
 
-function tooltipLines(m: ArrivalPoint): string[] {
+function tooltipLines(m: ArrivalPoint): (TextLine | string)[] {
   const kind = arrivalKind(m, props.backlogSeconds, props.futureToleranceSeconds)
-  const lines = [`<b>${stamp(Date.parse(m.receivedAt), props.utc)}</b>`]
+  const lines: (TextLine | string)[] = [{ text: stamp(Date.parse(m.receivedAt), props.utc), bold: true }]
   if (kind === 'noTime') lines.push('no observation time decoded')
   else if (kind === 'future') lines.push(`newest observation ${formatDuration(-m.latencySeconds!)} in the future (node clock ahead?)`)
   else lines.push(`latency ${m.latencySeconds! < 0 ? '0 s (clock slightly ahead)' : formatDuration(m.latencySeconds)}`)
@@ -58,7 +59,7 @@ const option = computed(() => {
       trigger: 'item',
       formatter: (p: { data: { id: string } }) => {
         const m = byId.value.get(p.data.id)
-        return m ? tooltipLines(m).join('<br>') : ''
+        return m ? textLines(tooltipLines(m)) : ''
       },
     },
     series: [

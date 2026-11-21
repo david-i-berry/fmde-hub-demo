@@ -160,10 +160,9 @@ export interface ConformanceIssue {
  */
 export interface NodeHubConfig {
   wigosId?: string
-  /** Parameters (long name or series key) whose empty values are expected and do not degrade the node. */
+  /** Parameters (long name or series key) whose empty values are expected (not counted as empty values). */
   expectedEmpty?: string[]
-  /** Override the global last-seen thresholds for this node. */
-  lateAfterSeconds?: number
+  /** Override the global silent threshold for this node. */
   silentAfterSeconds?: number
   /** Node-health parameters by series key, where the heuristic in health.ts does not find them. */
   healthParamMap?: {
@@ -174,7 +173,7 @@ export interface NodeHubConfig {
 }
 
 /** Operational state: is the node working? (conformance is separate) */
-export const NODE_STATES = ['NO_METADATA', 'NEVER_SEEN', 'SILENT', 'LATE', 'DEGRADED', 'OK'] as const
+export const NODE_STATES = ['NEVER_SEEN', 'SILENT', 'OK'] as const
 export type NodeState = (typeof NODE_STATES)[number]
 
 /** Does the node meet FMDE? Current metadata version plus data messages in the window. */

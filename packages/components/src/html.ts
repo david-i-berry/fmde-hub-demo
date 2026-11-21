@@ -1,9 +1,6 @@
-// Helpers for putting untrusted text into HTML. Metadata comes straight off the broker, so anyone who
-// can publish to the First Mile topics controls node names, units, URLs and namespace URIs.
-
-/** Escape text for an HTML string (ECharts tooltips, MapLibre popups, innerHTML). */
-export const esc = (s: string): string =>
-  s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!)
+// Links from untrusted metadata. Metadata comes straight off the broker, so anyone who can publish to
+// the First Mile topics controls node names, units, URLs and namespace URIs. Text is never put into
+// HTML strings: Vue templates escape it, and tooltips and popups are built as DOM nodes (dom.ts).
 
 /** The URL if it is absolute http(s), else undefined: never a javascript:, data: or other scheme in an href. */
 export function safeUrl(url: string | undefined | null): string | undefined {

@@ -22,14 +22,14 @@ function node(group: string, id: string, state: NodeStatus['state'], withMetadat
   }
 }
 
-const network = [node('b', 'n2', 'SILENT'), node('a', 'n1', 'OK'), node('a', 'n3', 'NO_METADATA', false)]
+const network = [node('b', 'n2', 'SILENT'), node('a', 'n1', 'OK'), node('a', 'n3', 'SILENT', false)]
 
 describe('buildTopology', () => {
   it('links hub, broker, groups (sorted, worst state), nodes and observers', () => {
     const { nodes, edges } = buildTopology(network, { brokerLabel: 'broker.example.org' }, { showParameters: false, collapseGroups: false })
     expect(nodes.map((n) => n.id)).toEqual(['hub', 'broker', 'group:a', 'node:a/n1', 'node:a/n1/obs:1', 'node:a/n3', 'group:b', 'node:b/n2', 'node:b/n2/obs:1'])
     expect(nodes.find((n) => n.id === 'broker')?.sublabel).toBe('broker.example.org')
-    expect(nodes.find((n) => n.id === 'group:a')).toMatchObject({ state: 'NO_METADATA', counts: { OK: 1, NO_METADATA: 1 } })
+    expect(nodes.find((n) => n.id === 'group:a')).toMatchObject({ state: 'SILENT', counts: { OK: 1, SILENT: 1 } })
     expect(nodes.find((n) => n.id === 'node:a/n1')).toMatchObject({ label: 'Node n1', battery: { value: 12.6, unit: 'V' } })
     expect(edges).toContainEqual(expect.objectContaining({ source: 'group:b', target: 'node:b/n2', state: 'SILENT' }))
   })

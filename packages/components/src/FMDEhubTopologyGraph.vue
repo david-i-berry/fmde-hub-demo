@@ -70,7 +70,7 @@ async function rebuild(relayout: boolean) {
     style: {
       stroke: edgeColour(e, neutral.value, ATTENTION),
       strokeWidth: e.state || e.attention ? 2.5 : 1.5,
-      strokeDasharray: e.attention ? '2 4' : e.state === 'SILENT' || e.state === 'NO_METADATA' || e.state === 'NEVER_SEEN' ? '6 4' : undefined,
+      strokeDasharray: e.attention ? '2 4' : e.state === 'SILENT' || e.state === 'NEVER_SEEN' ? '6 4' : undefined,
       strokeLinecap: e.attention ? 'round' : undefined,
     },
   }))
@@ -131,7 +131,7 @@ function onNodeClick(node: Node<TopoNode>) {
       <v-spacer />
       <div class="d-flex flex-wrap ga-3 text-caption">
         <span v-for="s in STATE_ORDER" :key="s" class="d-flex align-center ga-1" :title="STATE_META[s].description">
-          <svg width="22" height="6"><line x1="0" y1="3" x2="22" y2="3" :stroke="STATE_HEX[s]" stroke-width="2.5" :stroke-dasharray="s === 'SILENT' || s === 'NO_METADATA' ? '6 4' : undefined" /></svg>
+          <svg width="22" height="6"><line x1="0" y1="3" x2="22" y2="3" :stroke="STATE_HEX[s]" stroke-width="2.5" :stroke-dasharray="s === 'SILENT' ? '6 4' : undefined" /></svg>
           {{ STATE_META[s].label }}
         </span>
         <span v-if="showParameters" class="d-flex align-center ga-1">

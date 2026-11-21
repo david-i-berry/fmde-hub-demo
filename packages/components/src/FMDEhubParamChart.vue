@@ -5,7 +5,7 @@ import type { Parameter } from '@fmde-hub/fmde'
 import { computed } from 'vue'
 import VChart from 'vue-echarts'
 import { chartTokens, stamp, timeAxis, tooltipBase, valueAxis } from './chart'
-import { esc } from './html'
+import { textLines } from './dom'
 
 export interface ParamPoint {
   t: string
@@ -28,7 +28,7 @@ const option = computed(() => {
   const unit = p.unit
   const line: [number, number | null][] = props.points.map((x) => [Date.parse(x.t), x.v])
   const empties = props.points.filter((x) => x.v === null).map((x) => [Date.parse(x.t), 0])
-  const fmt = (v: number) => esc(`${Math.round(v * 1000) / 1000} ${unit}`)
+  const fmt = (v: number) => `${Math.round(v * 1000) / 1000} ${unit}`
   return {
     animation: false,
     grid: { left: 48, right: 12, top: 8, bottom: 22 },
@@ -42,7 +42,7 @@ const option = computed(() => {
         const it = items[0]
         if (!it) return ''
         const value = it.seriesIndex === 1 || it.value[1] === null ? 'empty value' : fmt(it.value[1])
-        return `${stamp(it.value[0], props.utc)}<br><b>${value}</b>`
+        return textLines([stamp(it.value[0], props.utc), { text: value, bold: true }])
       },
     },
     series: [

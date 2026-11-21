@@ -12,7 +12,8 @@ import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url'
 import { computed, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
 import { MAPBOX_SOURCE } from './basemap'
 import { formatAge } from './format'
-import { esc } from './html'
+import { chartTokens } from './chart'
+import { textLines } from './dom'
 import type { NetworkNode } from './network'
 import { STATE_HEX, STATE_META, STATE_ORDER, STATE_RANK } from './state'
 
@@ -208,7 +209,12 @@ function syncMarkers(m: MlMap, nearby: ReturnType<typeof featureCollections>['ne
       const el = document.createElement('div')
       el.className = 'fmde-hub-observer-marker'
       el.title = `${o.name}\nsame position as the node, ${o.text}`
-      el.innerHTML = `<svg width="80" height="80" viewBox="-40 -40 80 80" aria-hidden="true"><line x1="0" y1="0" x2="${dx}" y2="${dy}" stroke="${NO_DATA}" stroke-width="1.5" stroke-dasharray="3 3"/><circle cx="${dx}" cy="${dy}" r="5" style="pointer-events:all;cursor:help" fill="${NO_DATA}" stroke="${props.dark ? '#1a1a19' : '#fcfcfb'}" stroke-width="2"/></svg>`
+      const icon = svg('svg', { width: 80, height: 80, viewBox: '-40 -40 80 80', 'aria-hidden': 'true' })
+      icon.append(
+        svg('line', { x1: 0, y1: 0, x2: dx, y2: dy, stroke: NO_DATA, 'stroke-width': 1.5, 'stroke-dasharray': '3 3' }),
+        svg('circle', { cx: dx, cy: dy, r: 5, style: 'pointer-events:all;cursor:help', fill: NO_DATA, stroke: chartTokens(props.dark).background, 'stroke-width': 2 }),
+      )
+      el.append(icon)
       markers.push(new maplibregl.Marker({ element: el, anchor: 'center' }).setLngLat(n.lonLat).addTo(m))
     })
   }
@@ -245,16 +251,23 @@ function nodeByKey(key: string) {
   return props.network.find((n) => n.status.nodeKey === key)
 }
 
-function popupHtml(n: NetworkNode): string {
+function popupContent(n: NetworkNode): HTMLElement {
   const loc = n.metadata?.node.location
-  const lines = [
-    `<b>${esc(n.metadata?.node.name || n.status.nodeId)}</b>`,
-    `<span style="opacity:.75">${esc(n.status.nodeKey)}</span>`,
-    `${esc(STATE_META[n.status.state].label)} · last seen ${esc(formatAge(n.status.lastSeenAgeSeconds))}`,
-    loc ? esc(heightText(loc)) : '',
-    n.battery ? `battery ${esc(n.battery.value.toFixed(2))} ${esc(n.battery.unit)}` : '',
-  ]
-  return lines.filter(Boolean).join('<br>')
+  return textLines([
+    { text: n.metadata?.node.name || n.status.nodeId, bold: true },
+    { text: n.status.nodeKey, muted: true },
+    `${STATE_META[n.status.state].label} · last seen ${formatAge(n.status.lastSeenAgeSeconds)}`,
+    loc && heightText(loc),
+    n.battery && `battery ${n.battery.value.toFixed(2)} ${n.battery.unit}`,
+  ])
+}
+
+const SVG = 'http://www.w3.org/2000/svg'
+/** An SVG element with attributes (numbers and our own colours only). */
+function svg(tag: string, attrs: Record<string, string | number>): SVGElement {
+  const el = document.createElementNS(SVG, tag)
+  for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, String(v))
+  return el
 }
 
 const currentStyle = () => props.basemap ?? (props.dark ? props.darkStyleUrl : props.styleUrl)
@@ -308,7 +321,7 @@ onMounted(() => {
     popup?.remove()
     popup = new maplibregl.Popup({ closeButton: false, closeOnClick: false, offset: 14, className: 'fmde-hub-map-popup' })
       .setLngLat((e.features![0]!.geometry as Point).coordinates as [number, number])
-      .setHTML(popupHtml(n))
+      .setDOMContent(popupContent(n))
       .addTo(m)
   })
   m.on('mouseleave', 'nodes', () => {
@@ -324,7 +337,7 @@ onMounted(() => {
     popup?.remove()
     popup = new maplibregl.Popup({ closeButton: false, closeOnClick: false, offset: 10, className: 'fmde-hub-map-popup' })
       .setLngLat((e.features![0]!.geometry as Point).coordinates as [number, number])
-      .setHTML(`<b>${esc(String(p.name))}</b><br>${esc(String(p.height))}`)
+      .setDOMContent(textLines([{ text: String(p.name), bold: true }, String(p.height)]))
       .addTo(m)
   })
   m.on('mouseleave', 'observers', () => {

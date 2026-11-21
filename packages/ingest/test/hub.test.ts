@@ -112,3 +112,25 @@ it('answers every command with the error when ingest cannot start, without throw
   const last = received.filter((e) => e.type === 'status').at(-1)
   expect(last).toMatchObject({ status: { state: 'error', source: null, detail: expect.stringContaining('ingest could not start') } })
 })
+
+it('deletes what is stored for excluded groups when a source starts', async () => {
+  const { db, control, statuses } = await startedHub()
+  for (const key of ['wmo/a1', 'wmo/a2', 'test/b1']) {
+    const [group, node] = key.split('/')
+    await db.query(`insert into node (node_key, group_id, node_id, topic, first_seen_at) values ($1, $2, $3, $4, now())`, [key, group, node, `firstmile/a/${key}`])
+    await db.query(
+      `insert into observation (series_key, obs_time, node_key, param_key, metadata_version, definition_id, value_kind, is_empty, message_id, received_at)
+       values ($1, now(), $1, 'p', 1, 1, 'num', false, 'm', now())`,
+      [key],
+    )
+    await db.query(`insert into conformance_issue (received_at, topic, node_key, kind, code, detail) values (now(), $1, $2, 'data', 'X', '')`, [`firstmile/a/${key}`, key])
+  }
+  // an insecure URL is refused before connecting, after the deletion
+  control.postMessage({ type: 'start', config: { kind: 'mqtt', mqtt: { url: 'ws://broker.example.org/mqtt', excludeGroups: ' wmo , other' } } } satisfies ControlMessage)
+  await expect.poll(() => statuses().some((s) => s.detail?.includes('broker URL refused'))).toBe(true)
+
+  for (const table of ['node', 'observation', 'conformance_issue']) {
+    const left = await db.query<{ node_key: string }>(`select node_key from ${table}`)
+    expect(left.rows.map((r) => r.node_key)).toEqual(['test/b1'])
+  }
+})

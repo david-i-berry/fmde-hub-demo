@@ -1,11 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { esc, safeUrl } from '../src/html'
-
-describe('esc', () => {
-  it('escapes markup', () => {
-    expect(esc(`<img src=x onerror="alert('x')">&`)).toBe('&lt;img src=x onerror=&quot;alert(&#39;x&#39;)&quot;&gt;&amp;')
-  })
-})
+import { safeUrl } from '../src/html'
 
 describe('safeUrl', () => {
   it('allows absolute http(s) URLs', () => {

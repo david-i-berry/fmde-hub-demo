@@ -2,7 +2,7 @@
 import { EventEmitter } from 'node:events'
 import type { IClientOptions, MqttClient } from 'mqtt'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { MAX_PACKET_BYTES, MqttSource, REFUSAL_RETRY_MS } from '../src/mqtt'
+import { excludedGroups, isExcludedTopic, MAX_PACKET_BYTES, MqttSource, REFUSAL_RETRY_MS } from '../src/mqtt'
 import type { MqttSourceConfig, SourceStatus } from '../src/types'
 
 class FakeClient extends EventEmitter {
@@ -128,5 +128,35 @@ describe('MqttSource: refused connections', () => {
     const { client, last } = await started()
     client.emit('error', Object.assign(new Error('connect ECONNREFUSED'), { code: 'ECONNREFUSED' }))
     expect(last()).toEqual({ state: 'error', detail: 'connect ECONNREFUSED' })
+  })
+})
+
+describe('excluded groups', () => {
+  it('parses the comma-separated setting', () => {
+    expect(excludedGroups({ excludeGroups: ' wmo, ,other ' })).toEqual(['wmo', 'other'])
+    expect(excludedGroups({})).toEqual(['wmo'])
+    expect(excludedGroups({ excludeGroups: '' })).toEqual([])
+  })
+
+  it('matches the group level of firstmile/a and POC1 topics only', () => {
+    expect(isExcludedTopic('firstmile/a/wmo/n1', ['wmo'])).toBe(true)
+    expect(isExcludedTopic('firstmile/poc1/wmo/data/n1', ['wmo'])).toBe(true)
+    expect(isExcludedTopic('firstmile/a/wmo2/n1', ['wmo'])).toBe(false)
+    expect(isExcludedTopic('firstmile/a/test/wmo', ['wmo'])).toBe(false)
+    expect(isExcludedTopic('firstmile/a/wmo/n1/extra', ['wmo'])).toBe(false) // not First Mile: kept for BAD_TOPIC
+    expect(isExcludedTopic('firstmile/a/wmo/n1', [])).toBe(false)
+  })
+
+  it('drops messages from excluded groups without counting them', async () => {
+    const client = new FakeClient()
+    const topics: string[] = []
+    const statuses: Partial<SourceStatus>[] = []
+    const source = new MqttSource({ ...BASE, excludeGroups: 'wmo' }, () => client as unknown as MqttClient)
+    await source.start((m) => topics.push(m.topic), (s) => statuses.push(s))
+    const payload = Buffer.from([1])
+    client.emit('message', 'firstmile/a/wmo/n1', payload, { retain: false })
+    client.emit('message', 'firstmile/a/test/n1', payload, { retain: false })
+    expect(topics).toEqual(['firstmile/a/test/n1'])
+    expect(statuses.at(-1)).toMatchObject({ received: 1 })
   })
 })

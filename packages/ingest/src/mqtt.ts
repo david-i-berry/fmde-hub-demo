@@ -1,7 +1,7 @@
 // MqttSource: mqtt.js over WSS with read-only credentials, subscribing to firstmile/a/# and the legacy
 // firstmile/poc1/#.
 import mqtt, { type IClientOptions, type MqttClient } from 'mqtt'
-import { POC1_TOPIC_FILTER, TOPIC_FILTER } from '@fmde-hub/fmde'
+import { parseFirstMileTopic, POC1_TOPIC_FILTER, TOPIC_FILTER } from '@fmde-hub/fmde'
 import type { IncomingMessage, MqttSourceConfig, SourceStatus } from './types'
 import { brokerUrlProblem } from './urls'
 
@@ -22,6 +22,21 @@ export const MAX_PACKET_BYTES = 1024 * 1024
  */
 const TRANSIENT_REFUSALS = new Set([136, 137, 151, 159])
 export const REFUSAL_RETRY_MS = 60_000
+
+/** Default: the WMO group is not part of the networks FMDEhub shows. An empty setting excludes nothing. */
+export const DEFAULT_EXCLUDE_GROUPS = 'wmo'
+
+/** The group names in a comma-separated excludeGroups setting (the default if it is not set). */
+export function excludedGroups(config: Pick<MqttSourceConfig, 'excludeGroups'>): string[] {
+  return (config.excludeGroups ?? DEFAULT_EXCLUDE_GROUPS).split(',').map((g) => g.trim()).filter(Boolean)
+}
+
+/** True if the topic is a First Mile topic (firstmile/a or POC1) of one of the groups. */
+export function isExcludedTopic(topic: string, groups: readonly string[]): boolean {
+  if (groups.length === 0) return false
+  const t = parseFirstMileTopic(topic)
+  return t !== null && groups.includes(t.group)
+}
 
 /** mqtt.connect, replaceable in tests. */
 export type Connect = (url: string, options: IClientOptions) => MqttClient
@@ -65,6 +80,7 @@ export class MqttSource {
     // comma-separated filters
     const topic = this.config.topic || DEFAULT_TOPIC_FILTERS
     const filters = topic.split(',').map((t) => t.trim()).filter(Boolean)
+    const excluded = excludedGroups(this.config)
     onStatus({ state: 'connecting', detail: this.config.url })
     const client = this.connect(this.config.url, options)
     this.client = client
@@ -86,6 +102,7 @@ export class MqttSource {
       })
     })
     client.on('message', (msgTopic, payload, packet) => {
+      if (isExcludedTopic(msgTopic, excluded)) return
       received++
       const receivedAt = new Date().toISOString()
       onMessage({

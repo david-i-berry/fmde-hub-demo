@@ -3,7 +3,7 @@
 // subscribes and writes.
 import { CHANGE_CHANNEL, type Db } from '@fmde-hub/db'
 import { Ingestor } from './ingestor'
-import { MqttSource } from './mqtt'
+import { excludedGroups, MqttSource } from './mqtt'
 import type { IncomingMessage, IngestEvent, SourceConfig, SourceStatus } from './types'
 
 export const CONTROL_CHANNEL = 'fmde-hub-control'
@@ -141,11 +141,24 @@ export class IngestHub {
   private async startSource(config: SourceConfig) {
     await this.stopSource()
     this.status = { source: 'mqtt', state: 'idle', received: 0 }
+    await this.deleteGroups(excludedGroups(config.mqtt))
     const src = new MqttSource(config.mqtt)
     src.onConnect = (sessionPresent) => void this.openInterval('mqtt', sessionPresent).catch((e) => this.intervalFailed(e))
     src.onDisconnect = () => void this.closeInterval().catch((e) => this.intervalFailed(e))
     this.source = src
     await src.start((m) => this.enqueue(m), (s) => this.setStatus(s))
+  }
+
+  /** Delete everything stored for nodes in these groups (node keys are <group>/<node>). */
+  private async deleteGroups(groups: string[]) {
+    if (groups.length === 0) return
+    await this.db.transaction(async (tx) => {
+      await tx.query(`delete from observation where split_part(node_key, '/', 1) = any($1)`, [groups])
+      await tx.query(`delete from conformance_issue where split_part(node_key, '/', 1) = any($1)`, [groups])
+      // data messages, metadata versions, parameters and observers cascade
+      await tx.query(`delete from node where group_id = any($1)`, [groups])
+    })
+    await this.db.query(`select pg_notify($1, 'groups deleted')`, [CHANGE_CHANNEL])
   }
 
   private async stopSource() {

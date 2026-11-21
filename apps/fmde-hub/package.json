@@ -1,0 +1,30 @@
+{
+  "name": "@fmde-hub/app",
+  "version": "0.1.0",
+  "private": true,
+  "description": "FMDEhub progressive web app",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "typecheck": "vue-tsc --noEmit -p . && tsc --noEmit -p sw"
+  },
+  "dependencies": {
+    "@electric-sql/pglite": "0.5.13",
+    "@fmde-hub/components": "*",
+    "@fmde-hub/db": "*",
+    "@fmde-hub/fmde": "*",
+    "@fmde-hub/ingest": "*",
+    "@mdi/js": "7.4.47",
+    "vue": "3.5.44",
+    "vue-router": "4.6.4",
+    "vuetify": "3.13.7"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "6.0.10",
+    "vite": "8.3.5",
+    "vite-plugin-vuetify": "2.1.3",
+    "vue-tsc": "3.3.13"
+  }
+}

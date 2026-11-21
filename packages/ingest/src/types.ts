@@ -55,6 +55,12 @@ export interface MqttSourceConfig {
   clientId?: string
   /** Topic filter(s), comma-separated; defaults to firstmile/a/# and firstmile/poc1/# */
   topic?: string
+  /**
+   * Groups to ignore, comma-separated (the <group> level of firstmile/a/<group>/<node> and POC1 topics);
+   * defaults to `wmo`, and '' excludes nothing.
+   * MQTT filters cannot exclude, so their messages are dropped on arrival and what is stored is deleted.
+   */
+  excludeGroups?: string
   /** MQTT 5 with a session expiry so QoS 1 messages queue while no tab is open. */
   persistentSessionSeconds?: number
 }
